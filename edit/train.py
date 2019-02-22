@@ -1,7 +1,8 @@
 from __future__ import division
 
-import sys
-sys.path.append(r'../')
+import sys, os
+
+sys.path.append(os.getcwd())
 
 import numpy as np
 from edit.Translator import Translator
@@ -21,7 +22,6 @@ except ImportError:
     pass
 import PyBLEU.nltk_bleu_score as nltk_bleu_score
 from s2s.xinit import xavier_normal, xavier_uniform
-import os
 from PyRouge.Rouge import Rouge
 import xargs
 
@@ -31,16 +31,21 @@ xargs.add_model_options(parser)
 xargs.add_train_options(parser)
 
 opt = parser.parse_args()
-
-logging.basicConfig(format='%(asctime)s [%(levelname)s:%(name)s]: %(message)s', level=logging.INFO)
-log_file_name = time.strftime("%Y%m%d-%H%M%S") + '.log.txt'
+formatter = logging.Formatter('%(asctime)s [%(name)s]: %(message)s', '%d : %H:%M:%S')
+fmthandler = logging.StreamHandler()
+fmthandler.setFormatter(formatter)
+# logging.basicConfig(level=logging.INFO)
+# logging.root.addHandler(fmthandler)
+log_file_name = time.strftime("tmp") + '.log.txt'
 if opt.log_home:
     log_file_name = os.path.join(opt.log_home, log_file_name)
 file_handler = logging.FileHandler(log_file_name, encoding='utf-8')
 file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
 logging.root.addHandler(file_handler)
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+logger.addHandler(fmthandler)
+logger.setLevel(logging.INFO)
 logger.info('My PID is {0}'.format(os.getpid()))
 logger.info('PyTorch version: {0}'.format(str(torch.__version__)))
 logger.info(opt)
