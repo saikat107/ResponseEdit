@@ -113,7 +113,7 @@ def main():
             srcTokens = items[2].strip().split(' ')
             srcDelBatch += [srcTokens]
             if tgtF:
-                tgtTokens = tgtF.readline().split(' ') if tgtF else None
+                tgtTokens = tgtF.readline().strip().split(' ') if tgtF else None
                 tgtBatch += [tgtTokens]
 
             if len(srcBatch) < opt.batch_size:

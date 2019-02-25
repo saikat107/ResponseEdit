@@ -48,7 +48,7 @@ logger.addHandler(fmthandler)
 logger.setLevel(logging.INFO)
 logger.info('My PID is {0}'.format(os.getpid()))
 logger.info('PyTorch version: {0}'.format(str(torch.__version__)))
-logger.info(opt)
+# logger.info(opt)
 
 if torch.cuda.is_available() and not opt.gpus:
     logger.info("WARNING: You have a CUDA device, so you should probably run with -gpus 0")
