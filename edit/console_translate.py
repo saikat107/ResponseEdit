@@ -116,6 +116,12 @@ def main():
 
         for b in range(len(predBatch)):
             count += 1
+            src_sent = srcBatch[b]
+            predictions = predBatch[b]
+            scores = predScore[0]
+            beam_size = len(predBatch)
+            logger.info('%s\n%s\n%s\n%d' %(str(src_sent), str(predictions), str(scores), beam_size))
+
             outF.write(" ".join(predBatch[b][0]) + '\n')
             outF.flush()
 

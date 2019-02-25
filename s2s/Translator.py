@@ -116,7 +116,7 @@ class Translator(object):
             g_out_prob = self.model.generator.forward(g_outputs)
 
             # batch x beam x numWords
-            wordLk = g_out_prob.view(beamSize, remainingSents, -1).transpose(0, 1).contiguous()
+            word_prob = g_out_prob.view(beamSize, remainingSents, -1).transpose(0, 1).contiguous()
             attn = attn.view(beamSize, remainingSents, -1).transpose(0, 1).contiguous()
 
             active = []
@@ -126,7 +126,7 @@ class Translator(object):
                     continue
 
                 idx = batchIdx[b]
-                if not beam[b].advance(wordLk.data[idx], attn.data[idx]):
+                if not beam[b].advance(word_prob.data[idx], attn.data[idx]):
                     active += [b]
                     father_idx.append(beam[b].prevKs[-1])  # this is very annoying
 

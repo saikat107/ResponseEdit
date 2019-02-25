@@ -57,50 +57,50 @@ class Beam(object):
     #
     # Parameters:
     #
-    #     * `wordLk`- probs of advancing from the last step (K x words)
+    #     * `word_prob`- probs of advancing from the last step (K x words)
     #     * `attnOut`- attention at the last step
     #
     # Returns: True if beam search is complete.
-    def advance(self, wordLk, attnOut):
-        numWords = wordLk.size(1)
+    def advance(self, word_prob, attnOut):
+        numWords = word_prob.size(1)
 
         # self.length += 1  # TODO: some is finished so do not acc length for them
         if len(self.prevKs) > 0:
             finish_index = self.nextYs[-1].eq(s2s.Constants.EOS)
             if any(finish_index):
-                wordLk.masked_fill_(finish_index.unsqueeze(1).expand_as(wordLk), -float('inf'))
+                word_prob.masked_fill_(finish_index.unsqueeze(1).expand_as(word_prob), -float('inf'))
                 for i in range(self.size):
                     if self.nextYs[-1][i] == s2s.Constants.EOS:
-                        wordLk[i][s2s.Constants.EOS] = 0
+                        word_prob[i][s2s.Constants.EOS] = 0
             # set up the current step length
             cur_length = self.all_length[-1]
             for i in range(self.size):
                 cur_length[i] += 0 if self.nextYs[-1][i] == s2s.Constants.EOS else 1
         #print(wordLk.shape)
-        wordLk[:,s2s.Constants.UNK] = wordLk[:,s2s.Constants.UNK] - 100
+        word_prob[:, s2s.ConswordLktants.UNK] = word_prob[:, s2s.Constants.UNK] - 100
 
         #if len(self.nextYs) == 3:
-        for b in range(wordLk.size(0)):
+        for b in range(word_prob.size(0)):
             tmp = b
             for i in range( len(self.prevKs),0, -1):
                 #for j in range(len(self.prevKs[i])):
                 if self.nextYs[i][tmp] > 4:
-                    wordLk[b,self.nextYs[i][tmp]] -= 1
+                    word_prob[b, self.nextYs[i][tmp]] -= 1
                 tmp = self.prevKs[i - 1][tmp]
                     #wordLk[i,b[i]] -= 1000
 
         for b in self.nextYs:
             for i in range(len(b)):
                 if b[i] > 4:
-                    wordLk[i,b[i]] -= 1000
+                    word_prob[i, b[i]] -= 1000
         # Sum the previous scores.
         if len(self.prevKs) > 0:
             prev_score = self.all_scores[-1]
-            now_acc_score = wordLk + prev_score.unsqueeze(1).expand_as(wordLk)
+            now_acc_score = word_prob + prev_score.unsqueeze(1).expand_as(word_prob)
             beamLk = now_acc_score / cur_length.unsqueeze(1).expand_as(now_acc_score)
         else:
             self.all_length.append(self.tt.FloatTensor(self.size).fill_(1))
-            beamLk = wordLk[0]
+            beamLk = word_prob[0]
 
         flatBeamLk = beamLk.view(-1)
 
