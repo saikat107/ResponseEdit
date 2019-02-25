@@ -77,7 +77,7 @@ class Beam(object):
             for i in range(self.size):
                 cur_length[i] += 0 if self.nextYs[-1][i] == s2s.Constants.EOS else 1
         #print(wordLk.shape)
-        word_prob[:, s2s.ConswordLktants.UNK] = word_prob[:, s2s.Constants.UNK] - 100
+        word_prob[:,s2s.Constants.UNK] = word_prob[:,s2s.Constants.UNK] - 100
 
         #if len(self.nextYs) == 3:
         for b in range(word_prob.size(0)):

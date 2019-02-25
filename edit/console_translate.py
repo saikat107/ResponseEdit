@@ -10,12 +10,16 @@ import math
 import time
 import logging
 
-logging.basicConfig(format='%(asctime)s [%(levelname)s:%(name)s]: %(message)s', level=logging.INFO)
+# logging.basicConfig(format='%(asctime)s [%(levelname)s:%(name)s]: %(message)s', level=logging.INFO)
 file_handler = logging.FileHandler(time.strftime("%Y%m%d-%H%M%S") + '.log.txt', encoding='utf-8')
-file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)-5.5s:%(name)s] %(message)s'))
+file_handler.setFormatter(logging.Formatter('%(asctime)s [%(name)s] %(message)s'))
+formatter = logging.Formatter('%(asctime)s [%(name)s]: %(message)s', '%H:%M:%S')
+fmthandler = logging.StreamHandler()
+fmthandler.setFormatter(formatter)
 logging.root.addHandler(file_handler)
 logger = logging.getLogger(__name__)
-
+logger.addHandler(fmthandler)
+logger.setLevel(logging.INFO)
 parser = argparse.ArgumentParser(description='translate.py')
 
 parser.add_argument('-model', required=True,
@@ -110,17 +114,23 @@ def main():
 
         predScoreTotal += sum(score[0] for score in predScore)
         predWordsTotal += sum(len(x[0]) for x in predBatch)
-        # if tgtF is not None:
-        #     goldScoreTotal += sum(goldScore)
-        #     goldWordsTotal += sum(len(x) for x in tgtBatch)
+        if tgtF is not None:
+            goldScoreTotal += sum(goldScore)
+            goldWordsTotal += sum(len(x) for x in tgtBatch)
+
+        logger.info('Source Shape : %s' % str(srcBatch.size()))
+        logger.info('Target Shape : %s' % str(tgtBatch.size()))
+        logger.info('Prediction Shape : %s' % str(predBatch.size()))
+        logger.info('Batch Size : %d' % len(srcBatch))
+        logger.info('Beam Size : %d' % opt.beam_size)
 
         for b in range(len(predBatch)):
             count += 1
-            src_sent = srcBatch[b]
-            predictions = predBatch[b]
-            scores = predScore[0]
-            beam_size = len(predBatch)
-            logger.info('%s\n%s\n%s\n%d' %(str(src_sent), str(predictions), str(scores), beam_size))
+            # src_sent = srcBatch[b]
+            # predictions = predBatch[b]
+            # scores = predScore[0]
+            # beam_size = len(predBatch)
+            # logger.info('%s\n%s\n%s\n%d' %(str(src_sent), str(predictions), str(scores), beam_size))
 
             outF.write(" ".join(predBatch[b][0]) + '\n')
             outF.flush()
@@ -150,8 +160,8 @@ def main():
         srcBatch, srcInsBatch, srcDelBatch, tgtBatch = [], [], [], []
 
     reportScore('PRED', predScoreTotal, predWordsTotal)
-    # if tgtF:
-    #     reportScore('GOLD', goldScoreTotal, goldWordsTotal)
+    if tgtF:
+        reportScore('GOLD', goldScoreTotal, goldWordsTotal)
 
     if tgtF:
         tgtF.close()
