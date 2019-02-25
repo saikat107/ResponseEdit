@@ -114,13 +114,13 @@ def main():
 
         predScoreTotal += sum(score[0] for score in predScore)
         predWordsTotal += sum(len(x[0]) for x in predBatch)
-        if tgtF is not None:
-            goldScoreTotal += sum(goldScore)
-            goldWordsTotal += sum(len(x) for x in tgtBatch)
+        # if tgtF is not None:
+        #     goldScoreTotal += sum(goldScore)
+        #     goldWordsTotal += sum(len(x) for x in tgtBatch)
 
-        logger.info('Source Shape : %s' % str(srcBatch.size()))
-        logger.info('Target Shape : %s' % str(tgtBatch.size()))
-        logger.info('Prediction Shape : %s' % str(predBatch.size()))
+        logger.info('Source Shape : %d' % len(srcBatch))
+        logger.info('Target Shape : %d' % len(tgtBatch))
+        logger.info('Prediction Shape : %d' % len(predBatch[0]))
         logger.info('Batch Size : %d' % len(srcBatch))
         logger.info('Beam Size : %d' % opt.beam_size)
 
@@ -160,8 +160,8 @@ def main():
         srcBatch, srcInsBatch, srcDelBatch, tgtBatch = [], [], [], []
 
     reportScore('PRED', predScoreTotal, predWordsTotal)
-    if tgtF:
-        reportScore('GOLD', goldScoreTotal, goldWordsTotal)
+    # if tgtF:
+    #     reportScore('GOLD', goldScoreTotal, goldWordsTotal)
 
     if tgtF:
         tgtF.close()
