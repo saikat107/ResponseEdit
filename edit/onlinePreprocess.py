@@ -47,7 +47,7 @@ def initVocabulary(name, dataFiles, vocabFile, vocabSize):
         # If a dictionary is still missing, generate it.
         logger.info('Building ' + name + ' vocabulary...')
         genWordVocab = makeVocabulary(dataFiles, vocabSize)
-
+        saveVocabulary(name, genWordVocab, name + '.vocab')
         vocab = genWordVocab
 
     return vocab

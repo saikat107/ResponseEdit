@@ -22,7 +22,7 @@ except ImportError:
     pass
 import PyBLEU.nltk_bleu_score as nltk_bleu_score
 from s2s.xinit import xavier_normal, xavier_uniform
-from PyRouge.Rouge import Rouge
+#from PyRouge.Rouge import Rouge
 import xargs
 
 parser = argparse.ArgumentParser(description='train.py')
@@ -267,14 +267,14 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
 
                 report_loss = report_tgt_words = report_src_words = report_num_correct = 0
                 start = time.time()
-
-            if validData is not None and totalBatchCount % opt.eval_per_batch == -1 % opt.eval_per_batch \
+            #logger.info(validData)
+            if validData is not None and epoch % opt.eval_per_batch == -1 % opt.eval_per_batch \
                     and totalBatchCount >= opt.start_eval_batch:
                 model.eval()
-                logger.warning("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
+                logger.info("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
                 valid_bleu = evalModel(model, translator, validData)
                 model.train()
-                logger.warning("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
+                logger.info("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
                 model.decoder.attn.mask = None
                 logger.info('Validation Score: %g' % (valid_bleu * 100))
                 if valid_bleu >= optim.best_metric:

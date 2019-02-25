@@ -1,3 +1,5 @@
 .idea/*
 *.pyc
 *.log.txt
+Edt_Models/*
+projects/ins_del_edit/model/*
