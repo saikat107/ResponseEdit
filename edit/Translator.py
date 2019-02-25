@@ -218,7 +218,7 @@ class Translator(object):
 
     def translate(self, srcBatch, srcInsBatch, srcDelBatch, goldBatch):
         #  (1) convert words to indexes
-        print(len(srcBatch))
+        # print(len(srcBatch))
         dataset = self.buildData(srcBatch, srcInsBatch, srcDelBatch, goldBatch)
 
         # (wrap(srcBatch), lengths), (wrap(srcInsBatch),), (wrap(srcDelBatch),), (wrap(tgtBatch),), indices

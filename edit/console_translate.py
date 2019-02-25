@@ -72,6 +72,17 @@ def addPair(f1, f2):
     yield (None, None)
 
 
+def distance(sent1, sent2):
+    if isinstance(sent1, str):
+        sent1 = sent1.split()
+    if isinstance(sent2, str):
+        sent2 = sent2.split()
+    s1 = set(sent1)
+    s2 = set(sent2)
+    diff = s1.difference(s2)
+    return len(diff)
+
+
 def main():
     opt = parser.parse_args()
     logger.info(opt)
@@ -90,6 +101,8 @@ def main():
     count = 0
 
     tgtF = open(opt.tgt) if opt.tgt else None
+    correct_sentence = 0
+
     for line in addone(open(opt.src, encoding='utf-8')):
         if (line is not None):
             items = line.split('\t')
@@ -124,7 +137,7 @@ def main():
         logger.info('Batch Size : %d' % len(srcBatch))
         logger.info('Beam Size : %d' % opt.beam_size)
 
-        for b in range(len(predBatch)):
+        for sidx in range(len(predBatch)):
             count += 1
             # src_sent = srcBatch[b]
             # predictions = predBatch[b]
@@ -132,19 +145,25 @@ def main():
             # beam_size = len(predBatch)
             # logger.info('%s\n%s\n%s\n%d' %(str(src_sent), str(predictions), str(scores), beam_size))
 
-            outF.write(" ".join(predBatch[b][0]) + '\n')
+            outF.write(" ".join(predBatch[sidx][0]) + '\n')
             outF.flush()
-
+            srcSent = ' '.join(srcBatch[sidx])
+            predictions = predBatch[sidx]
+            tgtSent = tgtBatch[sidx]
+            for prediction in predictions:
+                if distance(tgtSent, prediction) == 0:
+                    correct_sentence += 1
+                    break
             if opt.verbose:
-                srcSent = ' '.join(srcBatch[b])
+                srcSent = ' '.join(srcBatch[sidx])
                 if translator.tgt_dict.lower:
                     srcSent = srcSent.lower()
                 logger.info('SENT %d: %s' % (count, srcSent))
-                logger.info('PRED %d: %s' % (count, " ".join(predBatch[b][0])))
-                logger.info("PRED SCORE: %.4f" % predScore[b][0])
+                logger.info('PRED %d: %s' % (count, " ".join(predBatch[sidx][0])))
+                logger.info("PRED SCORE: %.4f" % predScore[sidx][0])
 
                 if tgtF is not None:
-                    tgtSent = ' '.join(tgtBatch[b])
+                    tgtSent = ' '.join(tgtBatch[sidx])
                     if translator.tgt_dict.lower:
                         tgtSent = tgtSent.lower()
                     logger.info('GOLD %d: %s ' % (count, tgtSent))
@@ -153,7 +172,7 @@ def main():
                 if opt.n_best > 1:
                     logger.info('\nBEST HYP:')
                     for n in range(opt.n_best):
-                        logger.info("[%.4f] %s" % (predScore[b][n], " ".join(predBatch[b][n])))
+                        logger.info("[%.4f] %s" % (predScore[sidx][n], " ".join(predBatch[sidx][n])))
 
                 logger.info('')
 
@@ -165,6 +184,7 @@ def main():
 
     if tgtF:
         tgtF.close()
+    logger.info('Total correct : %d' % correct_sentence)
 
     logger.info('{0} copy'.format(translator.copyCount))
 
