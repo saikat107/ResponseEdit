@@ -196,9 +196,6 @@ class EditAttDecoder(nn.Module):
         del_hidden = self.attn2(context[-1],wordEmb.transpose(0, 1), None)[0]
         #del_hidden = torch.sum(wordEmb, dim=0)
 
-
-
-
         g_outputs = []
         cur_context = init_att
 
@@ -229,8 +226,8 @@ class EditAttDecoder(nn.Module):
             else:
                 readout = self.readout(torch.cat((emb_t, output, cur_context), dim=1))
 
-            maxout = self.maxout(readout)
-            output = self.dropout(maxout)
+            # maxout = self.maxout(readout)
+            output = self.dropout(readout)
             g_outputs += [output]
         g_outputs = torch.stack(g_outputs)
         return g_outputs, hidden, attn, cur_context

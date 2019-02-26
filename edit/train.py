@@ -202,15 +202,15 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
             'epoch': epoch,
             'optim': optim
         }
-        save_model_path = 'model'
-        if opt.save_path:
-            if not os.path.exists(opt.save_path):
-                os.makedirs(opt.save_path)
-            save_model_path = opt.save_path + os.path.sep + save_model_path
+        # save_model_path = 'model'
+        # if opt.save_path:
+        #     if not os.path.exists(opt.save_path):
+        #         os.makedirs(opt.save_path)
+        #     save_model_path = opt.save_path + os.path.sep + save_model_path
         if metric is not None:
-            torch.save(checkpoint, '{0}_dev_metric_{1}_e{2}.pt'.format(save_model_path, round(metric, 4), epoch))
+            torch.save(checkpoint, '{0}_dev_metric_{1}_e{2}.pt'.format(os.save_path, round(metric, 4), epoch))
         else:
-            torch.save(checkpoint, '{0}_e{1}.pt'.format(save_model_path, epoch))
+            torch.save(checkpoint, '{0}_e{1}.pt'.format(os.save_path, epoch))
 
     def trainEpoch(epoch):
 
