@@ -7,6 +7,8 @@ from s2s.Models import StackedGRU
 from torch.nn.utils.rnn import pad_packed_sequence as unpack
 from torch.nn.utils.rnn import pack_padded_sequence as pack
 
+from util import debug
+
 try:
     import ipdb
 except ImportError:
@@ -183,17 +185,20 @@ class EditAttDecoder(nn.Module):
             self.word_lut.weight.data.copy_(pretrained)
 
     def forward(self, input, hidden, ins_hidden, del_hidden, context, src_pad_mask, init_att, ins_pad_mask, del_pad_mask):
+        debug('Input Shape', input.size())
         emb = self.word_lut(input)
+        debug('Input Emb Shape', emb.size())
 
-        self.attn2.applyMask(ins_pad_mask)
-        wordEmb = self.word_lut(ins_hidden)
-        ins_hidden = self.attn2(context[-1],wordEmb.transpose(0, 1), None)[0]
+        if self.opt.insert:
+            self.attn2.applyMask(ins_pad_mask)
+            wordEmb = self.word_lut(ins_hidden)
+            ins_hidden = self.attn2(context[-1],wordEmb.transpose(0, 1), None)[0]
         #ins_hidden = self.attn2(init_att,wordEmb.transpose(0, 1), None)[0]
         #ins_hidden = torch.sum(wordEmb, dim=0)
-        self.attn2.applyMask(del_pad_mask)
-        wordEmb = self.word_lut(del_hidden)
-        #del_hidden = self.attn2(init_att,wordEmb.transpose(0, 1), None)[0]
-        del_hidden = self.attn2(context[-1],wordEmb.transpose(0, 1), None)[0]
+        if self.opt.delete:
+            self.attn2.applyMask(del_pad_mask)
+            wordEmb = self.word_lut(del_hidden)
+            del_hidden = self.attn2(context[-1],wordEmb.transpose(0, 1), None)[0]
         #del_hidden = torch.sum(wordEmb, dim=0)
 
         g_outputs = []
@@ -226,8 +231,8 @@ class EditAttDecoder(nn.Module):
             else:
                 readout = self.readout(torch.cat((emb_t, output, cur_context), dim=1))
 
-            # maxout = self.maxout(readout)
-            output = self.dropout(readout)
+            maxout = readout#self.maxout(readout)
+            output = self.dropout(maxout)
             g_outputs += [output]
         g_outputs = torch.stack(g_outputs)
         return g_outputs, hidden, attn, cur_context

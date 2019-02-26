@@ -2,6 +2,8 @@ from __future__ import division
 
 import sys, os
 
+from util import debug
+
 sys.path.append(os.getcwd())
 
 import numpy as np
@@ -46,8 +48,8 @@ logging.root.addHandler(file_handler)
 logger = logging.getLogger(__name__)
 logger.addHandler(fmthandler)
 logger.setLevel(logging.INFO)
-logger.info('My PID is {0}'.format(os.getpid()))
-logger.info('PyTorch version: {0}'.format(str(torch.__version__)))
+# logger.info('My PID is {0}'.format(os.getpid()))
+# logger.info('PyTorch version: {0}'.format(str(torch.__version__)))
 # logger.info(opt)
 
 if torch.cuda.is_available() and not opt.gpus:
@@ -61,9 +63,9 @@ if opt.gpus:
         torch.cuda.manual_seed(opt.cuda_seed)
     cuda.set_device(opt.gpus[0])
 
-logger.info('My seed is {0}'.format(torch.initial_seed()))
-if opt.gpus:
-    logger.info('My cuda seed is {0}'.format(torch.cuda.initial_seed()))
+# logger.info('My seed is {0}'.format(torch.initial_seed()))
+# if opt.gpus:
+#     logger.info('My cuda seed is {0}'.format(torch.cuda.initial_seed()))
 
 
 def NMTCriterion(vocabSize):
@@ -328,7 +330,7 @@ def trainAttEdit():
     decIniter = s2s.Models.DecInit(opt)
 
     generator = nn.Sequential(
-        nn.Linear(opt.dec_rnn_size // opt.maxout_pool_size, dicts['tgt'].size()),  # TODO: fix here
+        nn.Linear(opt.dec_rnn_size, dicts['tgt'].size()),  # TODO: fix here
         nn.LogSoftmax(dim=1))
 
     model = s2s.EditModels.IDEditModel(encoder, editEncoder, decoder, decIniter)
