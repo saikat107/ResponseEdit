@@ -111,7 +111,7 @@ class IDEditModel(nn.Module):
         """
         # ipdb.set_trace()
         src = input[0]
-        debug('Src : ', src.shape)
+        debug('Src : ', src[0].shape, src[1].shape)
         src_ins = input[1][0]
         src_ins_len = Variable(src_ins.data.eq(s2s.Constants.PAD).transpose(0, 1).float(), requires_grad=False,
                                 volatile=False)
@@ -121,6 +121,7 @@ class IDEditModel(nn.Module):
                                 volatile=False)
         debug('Src Del : ', src_del.shape)
         tgt = input[3][0][:-1]  # exclude last target from inputs
+        debug('Tgt : ', tgt.shape)
         src_pad_mask = Variable(src[0].data.eq(s2s.Constants.PAD).transpose(0, 1).float(), requires_grad=False,
                                 volatile=False)
         enc_hidden, context = self.encoder(src)
