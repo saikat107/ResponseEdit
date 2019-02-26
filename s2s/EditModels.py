@@ -126,9 +126,10 @@ class IDEditModel(nn.Module):
         # enc_del_hidden = self.editEncoder(src_del)
 
         init_att = self.make_init_att(context)
-        enc_hidden = self.decIniter(enc_hidden[1]).unsqueeze(0)  # [1] is the last backward hiden
-
-        g_out, dec_hidden, _attn, _attention_vector = self.decoder(tgt, enc_hidden, src_ins, src_del,
+        dec_init_hidden = self.decIniter(enc_hidden[1]).unsqueeze(0)  # [1] is the last backward hiden
+        debug(enc_hidden.shape)
+        debug(dec_init_hidden.shape)
+        g_out, dec_hidden, _attn, _attention_vector = self.decoder(tgt, dec_init_hidden, src_ins, src_del,
                                                                    context, src_pad_mask, init_att,src_ins_len,src_del_len)
 
         return g_out

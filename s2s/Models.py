@@ -26,7 +26,7 @@ class Encoder(nn.Module):
         self.rnn = nn.GRU(input_size, self.hidden_size,
                           num_layers=opt.layers,
                           dropout=opt.dropout,
-                          bidirectional=opt.brnn)
+                          bidirectional=True)
 
     def load_pretrained_vectors(self, opt):
         if opt.pre_word_vecs_enc is not None:
@@ -125,7 +125,7 @@ class Decoder(nn.Module):
 class DecInit(nn.Module):
     def __init__(self, opt):
         super(DecInit, self).__init__()
-        self.num_directions = 2 if opt.brnn else 1
+        self.num_directions = 2 #if opt.brnn else 1
         assert opt.enc_rnn_size % self.num_directions == 0
         self.enc_rnn_size = opt.enc_rnn_size
         self.dec_rnn_size = opt.dec_rnn_size
