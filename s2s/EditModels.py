@@ -111,27 +111,33 @@ class IDEditModel(nn.Module):
         """
         # ipdb.set_trace()
         src = input[0]
+        debug('Src : ', src.shape)
         src_ins = input[1][0]
         src_ins_len = Variable(src_ins.data.eq(s2s.Constants.PAD).transpose(0, 1).float(), requires_grad=False,
                                 volatile=False)
+        debug('Src Ins : ', src_ins.shape)
         src_del = input[2][0]
         src_del_len = Variable(src_del.data.eq(s2s.Constants.PAD).transpose(0, 1).float(), requires_grad=False,
                                 volatile=False)
+        debug('Src Del : ', src_del.shape)
         tgt = input[3][0][:-1]  # exclude last target from inputs
         src_pad_mask = Variable(src[0].data.eq(s2s.Constants.PAD).transpose(0, 1).float(), requires_grad=False,
                                 volatile=False)
         enc_hidden, context = self.encoder(src)
+        debug('Encoder hidden : ', enc_hidden.shape)
+        debug('Context : ', context.shape)
 
         # enc_ins_hidden = self.editEncoder(src_ins)
         # enc_del_hidden = self.editEncoder(src_del)
 
         init_att = self.make_init_att(context)
+        debug('Init Att : ', init_att.shape)
         dec_init_hidden = self.decIniter(enc_hidden[1]).unsqueeze(0)  # [1] is the last backward hiden
-        debug(enc_hidden.shape)
+        # debug(enc_hidden.shape)
         debug(dec_init_hidden.shape)
         g_out, dec_hidden, _attn, _attention_vector = self.decoder(tgt, dec_init_hidden, src_ins, src_del,
                                                                    context, src_pad_mask, init_att,src_ins_len,src_del_len)
-
+        debug('G Out', g_out.shape)
         return g_out
 
 
@@ -186,9 +192,9 @@ class EditAttDecoder(nn.Module):
             self.word_lut.weight.data.copy_(pretrained)
 
     def forward(self, input, hidden, ins_hidden, del_hidden, context, src_pad_mask, init_att, ins_pad_mask, del_pad_mask):
-        debug('Input Shape', input.size())
+        # debug('Input Shape', input.size())
         emb = self.word_lut(input)
-        debug('Input Emb Shape', emb.size())
+        # debug('Input Emb Shape', emb.size())
 
         if self.opt.insert:
             self.attn2.applyMask(ins_pad_mask)
