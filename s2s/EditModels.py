@@ -140,9 +140,9 @@ class EditAttDecoder(nn.Module):
         input_size = opt.word_vec_size
         if self.input_feed:
             input_size += opt.enc_rnn_size
-            if not opt.no_ins:
+            if opt.insert:
                 input_size += opt.word_vec_size
-            if not opt.no_del:
+            if opt.delete:
                 input_size += opt.word_vec_size
 
         super(EditAttDecoder, self).__init__()
