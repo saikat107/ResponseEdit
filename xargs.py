@@ -22,9 +22,9 @@ def add_data_options(parser):
     # tmp solution for load issue
     parser.add_argument('-online_process_data', action="store_true")
     parser.add_argument('-process_shuffle', action="store_true")
-    parser.add_argument('-train_src')
+    parser.add_argument('-train_src', default='Edt/dummy.parent')
     parser.add_argument('-src_vocab')
-    parser.add_argument('-train_tgt')
+    parser.add_argument('-train_tgt', default='Edt/dummy.child')
     parser.add_argument('-tgt_vocab')
 
     # Test options
@@ -63,6 +63,8 @@ def add_model_options(parser):
     parser.add_argument('-brnn_merge', default='concat',
                         help="""Merge action for the bidirectional hidden states:
                         [concat|sum]""")
+    parser.add_argument('-insert', action='store_true')
+    parser.add_argument('-delete', action='store_true')
 
 
 def add_train_options(parser):

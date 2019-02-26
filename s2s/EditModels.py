@@ -139,7 +139,11 @@ class EditAttDecoder(nn.Module):
         self.input_feed = opt.input_feed
         input_size = opt.word_vec_size
         if self.input_feed:
-            input_size += opt.enc_rnn_size + opt.word_vec_size * 2
+            input_size += opt.enc_rnn_size
+            if not opt.no_ins:
+                input_size += opt.word_vec_size
+            if not opt.no_del:
+                input_size += opt.word_vec_size
 
         super(EditAttDecoder, self).__init__()
         self.word_lut = nn.Embedding(dicts.size(),
@@ -149,11 +153,25 @@ class EditAttDecoder(nn.Module):
         self.attn = s2s.modules.ConcatAttention(opt.enc_rnn_size, opt.dec_rnn_size, opt.att_vec_size)
         self.attn2 = s2s.modules.ConcatAttention(opt.word_vec_size, opt.enc_rnn_size,opt.word_vec_size)
         self.dropout = nn.Dropout(opt.dropout)
-        self.readout = nn.Linear((opt.enc_rnn_size
-                                  + opt.dec_rnn_size
-                                  + opt.word_vec_size
-                                  + opt.word_vec_size * 2 # edit vector length
-                                  ), opt.dec_rnn_size)
+        if opt.insert and opt.delete:
+            self.readout = nn.Linear((opt.enc_rnn_size
+                                      + opt.dec_rnn_size
+                                      + opt.word_vec_size
+                                      + opt.word_vec_size * 2 # edit vector length
+                                      ), opt.dec_rnn_size)
+        elif not opt.insert and not opt.delete:
+            self.readout = nn.Linear((opt.enc_rnn_size
+                                      + opt.dec_rnn_size
+                                      + opt.word_vec_size
+                                      + 0 #opt.word_vec_size * 2  # edit vector length
+                                      ), opt.dec_rnn_size)
+        else:
+            self.readout = nn.Linear((opt.enc_rnn_size
+                                      + opt.dec_rnn_size
+                                      + opt.word_vec_size
+                                      + opt.word_vec_size * 1  # edit vector length
+                                      ), opt.dec_rnn_size)
+
         self.maxout = s2s.modules.MaxOut(opt.maxout_pool_size)
         self.maxout_pool_size = opt.maxout_pool_size
 
@@ -190,11 +208,27 @@ class EditAttDecoder(nn.Module):
             emb_t = emb_t.squeeze(0)
             input_emb = emb_t
             if self.input_feed:
-                input_emb = torch.cat([emb_t, cur_context, ins_hidden, del_hidden], 1)
+                if self.opt.insert and self.opt.delete:
+                    input_emb = torch.cat([emb_t, cur_context, ins_hidden, del_hidden], 1)
+                elif self.opt.insert and not self.opt.delete:
+                    input_emb = torch.cat([emb_t, cur_context, ins_hidden], 1)
+                elif not self.opt.insert and self.opt.delete:
+                    input_emb = torch.cat([emb_t, cur_context, del_hidden], 1)
+                else:
+                    input_emb = torch.cat([emb_t, cur_context], 1)
+
             output, hidden = self.rnn(input_emb, hidden)
             cur_context, attn, precompute = self.attn(output, context.transpose(0, 1), precompute)
 
-            readout = self.readout(torch.cat((emb_t, output, cur_context, ins_hidden, del_hidden), dim=1))
+            if self.opt.insert and self.opt.delete:
+                readout = self.readout(torch.cat((emb_t, output, cur_context, ins_hidden, del_hidden), dim=1))
+            elif self.opt.insert and not self.opt.delete:
+                readout = self.readout(torch.cat((emb_t, output, cur_context, ins_hidden), dim=1))
+            elif not self.opt.insert and self.opt.delete:
+                readout = self.readout(torch.cat((emb_t, output, cur_context, del_hidden), dim=1))
+            else:
+                readout = self.readout(torch.cat((emb_t, output, cur_context), dim=1))
+
             maxout = self.maxout(readout)
             output = self.dropout(maxout)
             g_outputs += [output]
