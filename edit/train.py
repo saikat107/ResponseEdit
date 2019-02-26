@@ -2,10 +2,9 @@ from __future__ import division
 
 import sys, os
 
-from util import debug
 
 sys.path.append(os.getcwd())
-
+from util import debug
 import numpy as np
 from edit.Translator import Translator
 import s2s
