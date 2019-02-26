@@ -81,7 +81,7 @@ def loss_function(g_outputs, g_targets, generator, crit, eval=False):
 
     g_out_t = g_outputs.view(-1, g_outputs.size(2))
     g_prob_t = generator(g_out_t)
-    debug(g_out_t.shape)
+    # debug(g_out_t.shape)
 
     g_loss = crit(g_prob_t, g_targets.view(-1))
     total_loss = g_loss
@@ -239,7 +239,7 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
             g_outputs = model(batch)
             targets = batch[3][0][1:]  # exclude <s> from targets
             loss, res_loss, num_correct = loss_function(g_outputs, targets, model.generator, criterion)
-            debug('\n\n')
+            # debug('\n\n')
             if math.isnan(res_loss) or res_loss > 1e20:
                 logger.info('catch NaN')
                 ipdb.set_trace()

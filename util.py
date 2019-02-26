@@ -8,7 +8,7 @@ def debug(*msg):
     file_name = file_path
     if os.getcwd() in file_path:
         file_name = file_path[len(os.getcwd())+1:]
-    stack = str(file_name) + '#' + str(line_num)
+    stack = str(file_name) + ' # ' + str(line_num)
     print(stack, end=' ')
     res = '\t'
     for ms in msg:
