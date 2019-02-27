@@ -11,7 +11,7 @@ python edit/train.py \
 	-train_src $src \
 	-train_tgt $tgt \
 	-layers 1 -enc_rnn_size 512 -brnn -word_vec_size 300 -dropout 0.5 \
-	-batch_size 2 -beam_size 1 \
+	-batch_size  32 -beam_size 1 \
 	-epochs 2000 \
 	-gpus 0 \
 	-optim adam -learning_rate 0.001 \

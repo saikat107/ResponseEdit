@@ -3,3 +3,5 @@
 *.log.txt
 Edt_Models/*
 projects/ins_del_edit/model/*
+with_ins_del/*
+wo_ins_del/*
