@@ -33,7 +33,7 @@ class Translator(object):
             model = s2s.EditModels.IDEditModel(encoder, editEncoer, decoder, decIniter)
 
             generator = nn.Sequential(
-                nn.Linear(model_opt.dec_rnn_size // model_opt.maxout_pool_size, self.tgt_dict.size()),
+                nn.Linear(model_opt.dec_rnn_size, self.tgt_dict.size()),
                 nn.LogSoftmax())
 
             model.load_state_dict(checkpoint['model'])
