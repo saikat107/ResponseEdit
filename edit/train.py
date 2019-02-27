@@ -1,8 +1,6 @@
 from __future__ import division
 
 import sys, os
-
-
 sys.path.append(os.getcwd())
 from util import debug
 import numpy as np
@@ -181,7 +179,7 @@ def evalModel(model, translator, evalData):
 
 
 def trainModel(model, translator, trainData, validData, dataset, optim):
-    logger.info(model)
+    debug(model)
     model.train()
     logger.warning("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
 
@@ -210,14 +208,14 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
         #         os.makedirs(opt.save_path)
         #     save_model_path = opt.save_path + os.path.sep + save_model_path
         if metric is not None:
-            torch.save(checkpoint, '{0}_dev_metric_{1}_e{2}.pt'.format(os.save_path, round(metric, 4), epoch))
+            torch.save(checkpoint, '{0}_dev_metric_{1}_e{2}.pt'.format(opt.save_path, round(metric, 4), epoch))
         else:
-            torch.save(checkpoint, '{0}_e{1}.pt'.format(os.save_path, epoch))
+            torch.save(checkpoint, '{0}_e{1}.pt'.format(opt.save_path, epoch))
 
     def trainEpoch(epoch):
 
         if opt.extra_shuffle and epoch > opt.curriculum:
-            logger.info('Shuffling...')
+            debug('Shuffling...')
             trainData.shuffle()
 
         # shuffle mini batch order
@@ -241,7 +239,7 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
             loss, res_loss, num_correct = loss_function(g_outputs, targets, model.generator, criterion)
             # debug('\n\n')
             if math.isnan(res_loss) or res_loss > 1e20:
-                logger.info('catch NaN')
+                debug('catch NaN')
                 ipdb.set_trace()
             # update the parameters
             loss.backward()
@@ -256,7 +254,7 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
             total_num_correct += num_correct
             total_words += num_words
             if i % opt.log_interval == -1 % opt.log_interval:
-                logger.info(
+                debug(
                     "Epoch %2d, %6d/%5d/%5d; acc: %6.2f; loss: %6.2f; words: %5d; ppl: %6.2f; %3.0f src tok/s; %3.0f tgt tok/s; %6.0f s elapsed" %
                     (epoch, totalBatchCount, i + 1, len(trainData),
                      report_num_correct / report_tgt_words * 100,
@@ -273,12 +271,12 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
             if validData is not None and epoch % opt.eval_per_batch == -1 % opt.eval_per_batch \
                     and totalBatchCount >= opt.start_eval_batch:
                 model.eval()
-                logger.info("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
+                debug("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
                 valid_bleu = evalModel(model, translator, validData)
                 model.train()
-                logger.info("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
+                debug("Set model to {0} mode".format('train' if model.decoder.dropout.training else 'eval'))
                 model.decoder.attn.mask = None
-                logger.info('Validation Score: %g' % (valid_bleu * 100))
+                debug('Validation Score: %g' % (valid_bleu * 100))
                 if valid_bleu >= optim.best_metric:
                     saveModel(valid_bleu)
                 optim.updateLearningRate(valid_bleu, epoch)
@@ -287,13 +285,13 @@ def trainModel(model, translator, trainData, validData, dataset, optim):
         # return 0, 0
 
     for epoch in range(opt.start_epoch, opt.epochs + 1):
-        logger.info('')
+        debug('')
         #  (1) train for one epoch on the training set
         train_loss, train_acc = trainEpoch(epoch)
         train_ppl = math.exp(min(train_loss, 100))
-        logger.info('Train perplexity: %g' % train_ppl)
-        logger.info('Train accuracy: %g' % (train_acc * 100))
-        logger.info('Saving checkpoint for epoch {0}...'.format(epoch))
+        debug('Train perplexity: %g' % train_ppl)
+        debug('Train accuracy: %g' % (train_acc * 100))
+        debug('Saving checkpoint for epoch {0}...'.format(epoch))
         saveModel()
 
 
@@ -306,7 +304,7 @@ def trainAttEdit():
 
     dict_checkpoint = opt.train_from if opt.train_from else opt.train_from_state_dict
     if dict_checkpoint:
-        logger.info('Loading dicts from checkpoint at %s' % dict_checkpoint)
+        debug('Loading dicts from checkpoint at %s' % dict_checkpoint)
         checkpoint = torch.load(dict_checkpoint)
         dataset['dicts'] = checkpoint['dicts']
 
@@ -316,13 +314,13 @@ def trainAttEdit():
                             dataset['train']['tgt'], opt.batch_size, opt.gpus)
 
     dicts = dataset['dicts']
-    logger.info(' * vocabulary size. source = %d; target = %d' %
+    debug(' * vocabulary size. source = %d; target = %d' %
                 (dicts['src'].size(), dicts['tgt'].size()))
-    logger.info(' * number of training sentences. %d' %
+    debug(' * number of training sentences. %d' %
                 len(dataset['train']['src']))
-    logger.info(' * maximum batch size. %d' % opt.batch_size)
+    debug(' * maximum batch size. %d' % opt.batch_size)
 
-    logger.info('Building model...')
+    debug('Building model...')
 
     encoder = s2s.Models.Encoder(opt, dicts['src'])
     editEncoder = s2s.EditModels.EditEncoder(opt, dicts['src'])
@@ -336,7 +334,7 @@ def trainAttEdit():
     model = s2s.EditModels.IDEditModel(encoder, editEncoder, decoder, decIniter)
 
     if opt.train_from:
-        logger.info('Loading model from checkpoint at %s' % opt.train_from)
+        debug('Loading model from checkpoint at %s' % opt.train_from)
         chk_model = checkpoint['model']
         generator_state_dict = chk_model.generator.state_dict()
         model_state_dict = {k: v for k, v in chk_model.state_dict().items() if 'generator' not in k}
@@ -345,7 +343,7 @@ def trainAttEdit():
         opt.start_epoch = checkpoint['epoch'] + 1
 
     if opt.train_from_state_dict:
-        logger.info('Loading model from checkpoint at %s' % opt.train_from_state_dict)
+        debug('Loading model from checkpoint at %s' % opt.train_from_state_dict)
         model.load_state_dict(checkpoint['model'])
         generator.load_state_dict(checkpoint['generator'])
         opt.start_epoch = checkpoint['epoch'] + 1
@@ -366,7 +364,7 @@ def trainAttEdit():
 
     if not opt.train_from_state_dict and not opt.train_from:
         # for pr_name, p in model.named_parameters():
-        #     logger.info(pr_name)
+        #     debug(pr_name)
         #     # p.data.uniform_(-opt.param_init, opt.param_init)
         #     if p.dim() == 1:
         #         # p.data.zero_()
@@ -386,9 +384,9 @@ def trainAttEdit():
             decay_bad_count=opt.halve_lr_bad_count
         )
     else:
-        logger.info('Loading optimizer from checkpoint:')
+        debug('Loading optimizer from checkpoint:')
         optim = checkpoint['optim']
-        logger.info(optim)
+        debug(optim)
 
     optim.set_parameters(model.parameters())
 

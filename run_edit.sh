@@ -2,7 +2,8 @@
 src=$1
 tgt=$2
 model=$3
-
+other_op=$4
+echo $other_op
 python edit/train.py \
 	-save_path $model \
 	-log_home log_tmp \
@@ -15,5 +16,5 @@ python edit/train.py \
 	-gpus 0 \
 	-optim adam -learning_rate 0.001 \
 	-curriculum 0 -extra_shuffle \
-	-seed 12345 -cuda_seed 12345
+	-seed 12345 -cuda_seed 12345 $other_op
 
