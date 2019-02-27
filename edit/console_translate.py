@@ -3,6 +3,7 @@ from __future__ import division
 import sys, os
 
 sys.path.append(os.getcwd())
+from util import debug
 
 from edit.Translator import Translator
 import torch
@@ -53,10 +54,11 @@ parser.add_argument('-n_best', type=int, default=1,
 
 parser.add_argument('-gpu', type=int, default=-1,
                     help="Device to run on")
+parser.add_argument('-name', help='Name of the experiment', required=True)
 
 
 def reportScore(name, scoreTotal, wordsTotal):
-    logger.info("%s AVG SCORE: %.4f, %s PPL: %.4f" % (
+    debug("%s AVG SCORE: %.4f, %s PPL: %.4f" % (
         name, scoreTotal / wordsTotal,
         name, math.exp(-scoreTotal / wordsTotal)))
 
@@ -86,12 +88,14 @@ def distance(sent1, sent2):
 
 def main():
     opt = parser.parse_args()
-    logger.info(opt)
+    # debug(opt)
     opt.cuda = opt.gpu > -1
     if opt.cuda:
         torch.cuda.set_device(opt.gpu)
 
     translator = Translator(opt)
+
+    distF = open(opt.name, 'w')
 
     outF = open(opt.output, 'w', encoding='utf-8')
 
@@ -132,11 +136,11 @@ def main():
         #     goldScoreTotal += sum(goldScore)
         #     goldWordsTotal += sum(len(x) for x in tgtBatch)
 
-        logger.info('Source Shape : %d' % len(srcBatch))
-        logger.info('Target Shape : %d' % len(tgtBatch))
-        logger.info('Prediction Shape : %d' % len(predBatch[0]))
-        logger.info('Batch Size : %d' % len(srcBatch))
-        logger.info('Beam Size : %d' % opt.beam_size)
+        debug('Source Shape : %d' % len(srcBatch))
+        debug('Target Shape : %d' % len(tgtBatch))
+        debug('Prediction Shape : %d' % len(predBatch[0]))
+        debug('Batch Size : %d' % len(srcBatch))
+        debug('Beam Size : %d' % opt.beam_size)
 
         for sidx in range(len(predBatch)):
             count += 1
@@ -144,38 +148,42 @@ def main():
             # predictions = predBatch[b]
             # scores = predScore[0]
             # beam_size = len(predBatch)
-            # logger.info('%s\n%s\n%s\n%d' %(str(src_sent), str(predictions), str(scores), beam_size))
-
+            # debug('%s\n%s\n%s\n%d' %(str(src_sent), str(predictions), str(scores), beam_size))
             outF.write(" ".join(predBatch[sidx][0]) + '\n')
             outF.flush()
             srcSent = ' '.join(srcBatch[sidx])
             predictions = predBatch[sidx]
             tgtSent = tgtBatch[sidx]
+            all_dists = []
             for prediction in predictions:
-                if distance(tgtSent, prediction) == 0:
-                    correct_sentence += 1
-                    break
+                dist = distance(tgtSent, prediction)
+                all_dists.append(dist)
+            min_dist = min(all_dists)
+            if min_dist == 0:
+                correct_sentence += 1
+            ds = [str(d) for d in all_dists]
+            distF.write(', '.join(ds) + '\n')
             if opt.verbose:
                 srcSent = ' '.join(srcBatch[sidx])
                 if translator.tgt_dict.lower:
                     srcSent = srcSent.lower()
-                logger.info('SENT %d: %s' % (count, srcSent))
-                logger.info('PRED %d: %s' % (count, " ".join(predBatch[sidx][0])))
-                logger.info("PRED SCORE: %.4f" % predScore[sidx][0])
+                debug('SENT %d: %s' % (count, srcSent))
+                debug('PRED %d: %s' % (count, " ".join(predBatch[sidx][0])))
+                debug("PRED SCORE: %.4f" % predScore[sidx][0])
 
                 if tgtF is not None:
                     tgtSent = ' '.join(tgtBatch[sidx])
                     if translator.tgt_dict.lower:
                         tgtSent = tgtSent.lower()
-                    logger.info('GOLD %d: %s ' % (count, tgtSent))
-                    # logger.info("GOLD SCORE: %.4f" % goldScore[b])
+                    debug('GOLD %d: %s ' % (count, tgtSent))
+                    # debug("GOLD SCORE: %.4f" % goldScore[b])
 
                 if opt.n_best > 1:
-                    logger.info('\nBEST HYP:')
+                    debug('\nBEST HYP:')
                     for n in range(opt.n_best):
-                        logger.info("[%.4f] %s" % (predScore[sidx][n], " ".join(predBatch[sidx][n])))
+                        debug("[%.4f] %s" % (predScore[sidx][n], " ".join(predBatch[sidx][n])))
 
-                logger.info('')
+                debug('')
 
         srcBatch, srcInsBatch, srcDelBatch, tgtBatch = [], [], [], []
 
@@ -185,9 +193,10 @@ def main():
 
     if tgtF:
         tgtF.close()
-    logger.info('Total correct : %d' % correct_sentence)
+    distF.close()
+    debug('Total correct : %d' % correct_sentence)
 
-    logger.info('{0} copy'.format(translator.copyCount))
+    debug('{0} copy'.format(translator.copyCount))
 
 
 if __name__ == "__main__":
